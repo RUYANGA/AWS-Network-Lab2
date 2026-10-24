@@ -4,7 +4,7 @@
 template-file-path: templates/onward-network.yaml
 
 parameters:
-  ProjectName: onward-network
+  ProjectName: onward
   Environment: dev
   OwnerName: Merci RUYANGA
   LabName: Designing Secure Network for Onward Logistics Order System
