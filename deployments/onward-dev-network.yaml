@@ -1,0 +1,22 @@
+# CloudFormation Git sync stack deployment file.
+# Git sync watches this file and the template below on the main branch.
+# Any commit that changes either one updates the stack onward-dev-network.
+template-file-path: templates/onward-network.yaml
+
+parameters:
+  ProjectName: onward-network
+  Environment: dev
+  OwnerName: Merci RUYANGA
+  LabName: Designing Secure Network for Onward Logistics Order System
+  VpcCidr: 10.20.0.0/16
+  NatGatewayMode: per-az             # per-az (survives AZ loss) | single (cheaper)
+  InstanceType: t3.micro             # use t2.micro if your account's Free Tier is t2
+  FrontendMinSize: "2"
+  FrontendMaxSize: "4"
+  BudgetEmail: merci.ruyanga@amalitech.com
+  MonthlyBudgetUsd: "160"
+
+tags:
+  Project: onward
+  Owner: Merci RUYANGA
+  Environment: dev

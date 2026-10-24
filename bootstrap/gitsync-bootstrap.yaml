@@ -1,0 +1,198 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Onward Logistics - one-time bootstrap for CloudFormation Git sync. Creates the
+  GitHub connection, the Git sync service role and the stack execution role.
+  Deployed once from the CLI. Customer managed policies only, no inline policies.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: onward
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, test, prod]
+  OwnerName:
+    Type: String
+    Default: Merci RUYANGA
+
+Resources:
+  # Created in PENDING state. Activating it is a one-time OAuth handshake with
+  # GitHub that AWS only allows through the console (Developer Tools >
+  # Settings > Connections > Update pending connection). It creates nothing.
+  GitHubConnection:
+    Type: AWS::CodeStarConnections::Connection
+    Properties:
+      ConnectionName: !Sub "${ProjectName}-${Environment}-github"
+      ProviderType: GitHub
+      Tags:
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: !Ref OwnerName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  # --- Role 1: Git sync service role (reads the repo, drives change sets) ---
+  GitSyncServicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Permissions required by CloudFormation Git sync (per AWS documentation).
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: SyncToCloudFormation
+            Effect: Allow
+            Action:
+              - cloudformation:CreateChangeSet
+              - cloudformation:DeleteChangeSet
+              - cloudformation:DescribeChangeSet
+              - cloudformation:DescribeStackEvents
+              - cloudformation:DescribeStacks
+              - cloudformation:ExecuteChangeSet
+              - cloudformation:GetTemplate
+              - cloudformation:ListChangeSets
+              - cloudformation:ListStacks
+              - cloudformation:ValidateTemplate
+            Resource: "*"
+          - Sid: PolicyForManagedRules
+            Effect: Allow
+            Action: [events:PutRule, events:PutTargets]
+            Resource: "*"
+            Condition:
+              StringEquals:
+                events:ManagedBy: cloudformation.sync.codeconnections.amazonaws.com
+          - Sid: PolicyForDescribingRule
+            Effect: Allow
+            Action: events:DescribeRule
+            Resource: "*"
+
+  GitSyncServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Assumed by CloudFormation Git sync.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: CfnGitSyncTrustPolicy
+            Effect: Allow
+            Principal: { Service: cloudformation.sync.codeconnections.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns: [!Ref GitSyncServicePolicy]
+      Tags:
+        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-gitsync-role" }
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: !Ref OwnerName }
+        - { Key: Environment, Value: !Ref Environment }
+
+  # --- Role 2: stack execution role (creates the network resources) ---
+  # Scoped to the services the network stack uses. IAM actions are limited to
+  # resources whose names start with the project prefix (CloudFormation names
+  # them after the stack, e.g. onward-dev-network-ServerRole-ABC123).
+  StackExecutionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Lets CloudFormation build the onward network stack.
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: NetworkComputeAndLoadBalancing
+            Effect: Allow
+            Action:
+              - ec2:*
+              - elasticloadbalancing:*
+              - autoscaling:*
+              - cloudwatch:PutMetricAlarm
+              - cloudwatch:DeleteAlarms
+              - cloudwatch:DescribeAlarms
+              - logs:*
+              - budgets:*
+            Resource: "*"
+          - Sid: ReadPublicAmiParameter
+            Effect: Allow
+            Action: [ssm:GetParameter, ssm:GetParameters]
+            Resource: !Sub "arn:${AWS::Partition}:ssm:*::parameter/aws/service/*"
+          - Sid: ManageProjectIam
+            Effect: Allow
+            Action:
+              - iam:CreateRole
+              - iam:DeleteRole
+              - iam:GetRole
+              - iam:UpdateRole
+              - iam:UpdateRoleDescription
+              - iam:TagRole
+              - iam:UntagRole
+              - iam:AttachRolePolicy
+              - iam:DetachRolePolicy
+              - iam:ListAttachedRolePolicies
+              - iam:ListRolePolicies
+              - iam:ListInstanceProfilesForRole
+              - iam:CreateInstanceProfile
+              - iam:DeleteInstanceProfile
+              - iam:GetInstanceProfile
+              - iam:TagInstanceProfile
+              - iam:UntagInstanceProfile
+              - iam:AddRoleToInstanceProfile
+              - iam:RemoveRoleFromInstanceProfile
+              - iam:CreatePolicy
+              - iam:DeletePolicy
+              - iam:GetPolicy
+              - iam:GetPolicyVersion
+              - iam:CreatePolicyVersion
+              - iam:DeletePolicyVersion
+              - iam:ListPolicyVersions
+              - iam:ListEntitiesForPolicy
+              - iam:TagPolicy
+              - iam:UntagPolicy
+            Resource:
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectName}-*"
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/${ProjectName}-*"
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/${ProjectName}-*"
+          - Sid: PassProjectRolesToEc2AndFlowLogsOnly
+            Effect: Allow
+            Action: iam:PassRole
+            Resource: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ProjectName}-*"
+            Condition:
+              StringEquals:
+                iam:PassedToService:
+                  - ec2.amazonaws.com
+                  - vpc-flow-logs.amazonaws.com
+          - Sid: AllowAwsManagedSsmPolicyAttachLookups
+            Effect: Allow
+            Action: iam:GetPolicy
+            Resource: !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          - Sid: ServiceLinkedRolesForAsgAndElb
+            Effect: Allow
+            Action: iam:CreateServiceLinkedRole
+            Resource: "*"
+            Condition:
+              StringEquals:
+                iam:AWSServiceName:
+                  - autoscaling.amazonaws.com
+                  - elasticloadbalancing.amazonaws.com
+
+  StackExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Assumed by CloudFormation to create the onward network stack.
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudformation.amazonaws.com }
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+      ManagedPolicyArns: [!Ref StackExecutionPolicy]
+      Tags:
+        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-cfn-exec-role" }
+        - { Key: Project, Value: !Ref ProjectName }
+        - { Key: Owner, Value: !Ref OwnerName }
+        - { Key: Environment, Value: !Ref Environment }
+
+Outputs:
+  ConnectionArn:
+    Description: Activate this connection once in the console before creating the Git sync stack.
+    Value: !Ref GitHubConnection
+  GitSyncServiceRoleArn:
+    Value: !GetAtt GitSyncServiceRole.Arn
+  StackExecutionRoleArn:
+    Value: !GetAtt StackExecutionRole.Arn
