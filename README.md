@@ -1,7 +1,7 @@
-# onward-dev-network: Secure network for the Onward Logistics order system
+# onward-network: Secure network for the Onward Logistics order system
 
 Lab: **Designing Secure Network for Onward Logistics Order System** (Network & Security on AWS, Week 2)
-Owner: **Merci RUYANGA** | Region: **eu-west-1** | Stack: **onward-dev-network**
+Owner: **Merci RUYANGA** | Region: **eu-west-1** | Stack: **onward-network**
 
 A highly available, private-by-default VPC built entirely with CloudFormation and deployed with CloudFormation Git sync. Merchants and customers reach the order front end through a load balancer that spans two Availability Zones; internal order services have no inbound path from the internet; engineers administer every server through Session Manager with no open ports and no keys.
 
@@ -110,7 +110,7 @@ CloudFormation > Create stack > **Sync from Git**:
 
 | Field | Value |
 |---|---|
-| Stack name | `onward-dev-network` (must start with `onward-` so the execution role can manage its IAM resources) |
+| Stack name | `onward-network` (must start with `onward-` so the execution role can manage its IAM resources) |
 | Deployment file | I am providing my own file in my repository |
 | Connection / repository / branch | `onward-dev-github` / `AWS-Network-Lab2` / `main` |
 | Deployment file path | `deployments/onward-dev-network.yaml` |
@@ -122,7 +122,7 @@ The stack takes about 8 to 12 minutes; it completes only after both front-end se
 ### 5. Verify
 
 ```bash
-./scripts/verify-checks.sh onward-dev-network eu-west-1
+./scripts/verify-checks.sh onward-network eu-west-1
 ```
 
 See `docs/demo-runbook.md` for the live review.
@@ -135,9 +135,9 @@ Attach the stack output `SessionOperatorsPolicyArn` to the engineers' IAM Identi
 
 Change: edit the template or deployment file, open a pull request (CI lints it), merge to `main`. For example, set `NatGatewayMode: single` to save about 39 USD per month in dev.
 
-Rebuild: `aws cloudformation delete-stack --stack-name onward-dev-network`, then recreate it with step 4. Nothing outside the repository is needed.
+Rebuild: `aws cloudformation delete-stack --stack-name onward-network`, then recreate it with step 4. Nothing outside the repository is needed.
 
-Tear down completely: delete `onward-dev-network`, then `onward-dev-gitsync-bootstrap`. Nothing has deletion protection, so nothing is left billing.
+Tear down completely: delete `onward-network` first, then turn off termination protection on `onward-dev-gitsync-bootstrap` and delete it. Never delete the bootstrap while the network stack exists: Git sync and CloudFormation need its roles for every update and delete.
 
 ## Troubleshooting
 

@@ -2,7 +2,7 @@
 # Runs the client's checks against the deployed stack.
 # Usage: ./scripts/verify-checks.sh [stack-name] [region]
 set -uo pipefail
-STACK="${1:-onward-dev-network}"
+STACK="${1:-onward-network}"
 REGION="${2:-eu-west-1}"
 export AWS_REGION="$REGION"
 
