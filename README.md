@@ -13,7 +13,8 @@ AWS-Network-Lab2/
 ├── .gitignore
 ├── .github/
 │   └── workflows/
-│       └── validate.yml               CI: cfn-lint, blocks inline policies and port 22/3389
+│       ├── validate.yml               CI: cfn-lint, blocks inline policies and port 22/3389
+│       └── secret-scan.yml            CI: gitleaks, blocks committed credentials
 ├── docs/
 │   ├── discovery.md                   Stage 1 report (commit this FIRST)
 │   ├── architecture.md                Mermaid diagram, traffic rules, failure behaviour
@@ -162,6 +163,15 @@ Change: edit the template or deployment file, open a pull request (CI lints it),
 Rebuild: `aws cloudformation delete-stack --stack-name onward-network`, then recreate it with step 4. Nothing outside the repository is needed.
 
 Tear down completely: delete `onward-network` first, then turn off termination protection on `onward-dev-gitsync-bootstrap` and delete it. Never delete the bootstrap while the network stack exists: Git sync and CloudFormation need its roles for every update and delete.
+
+## Handling credentials
+
+No credentials belong in this repository, in pull request comments or in issues. The repository is public, so anything pasted here is exposed immediately.
+
+- Use CloudShell or `aws sso login`; never create long-lived access keys for this lab.
+- Before pasting terminal output anywhere, check it for `AKIA`, `ASIA`, `aws_secret_access_key` or `aws_session_token`. Never share the output of `env`, `printenv` or `aws configure export-credentials`.
+- The `secret-scan` workflow fails any pull request that commits a credential. Also enable **Settings > Code security > Secret Protection > Push protection** so GitHub rejects such pushes outright.
+- If a key leaks: delete the comment or rewrite the commit, revoke active sessions for the IAM role (IAM > Roles > Revoke active sessions), review CloudTrail for the access key ID, close the GitHub alert as revoked, and inform the account owner.
 
 ## Troubleshooting
 
