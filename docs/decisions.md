@@ -19,5 +19,5 @@ Company standard: write down each decision with its reason, in business terms.
 | D13 | VPC Flow Logs, 14-day retention | Evidence for the Head of Security and auditors that no inbound internet connection reached internal servers; short retention keeps cost low | No logs, S3 destination |
 | D14 | AWS Budgets alert at 80% actual and 100% forecast | The Finance Lead hears about overspend before the invoice | Manual Cost Explorer checks |
 | D15 | One template deployed with Git sync; bootstrap roles in a separate template | Every change is a reviewed commit; the environment can be destroyed and rebuilt from Git | Console builds, manual CLI deploys |
-| D16 | HTTP only in dev | No domain or certificate exists for the lab; production adds ACM and an HTTPS listener | Self-signed certificate |
+| D16 | HTTP by default; HTTPS when `DomainName` is set | A free ACM certificate and HTTPS listener with HTTP-to-HTTPS redirect protect customer traffic once a domain exists. DNS stays at the existing provider (Hostinger), so no domain transfer or Route 53 hosted zone cost | Self-signed certificate, moving DNS to Route 53 |
 | D17 | Front-end page installed by user data at launch | Every new server, including replacements during a failure, serves the page with no human step | Baked AMI (planned once releases move to weekly) |

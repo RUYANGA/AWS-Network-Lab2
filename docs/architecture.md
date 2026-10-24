@@ -67,6 +67,7 @@ flowchart TB
 | From | To | Port | Allowed by |
 |---|---|---|---|
 | Internet | ALB | 80 | `onward-dev-orders-alb-sg` ingress 0.0.0.0/0 |
+| Internet | ALB | 443 (only when `DomainName` is set; port 80 then redirects to HTTPS) | `onward-dev-orders-alb-sg` ingress 0.0.0.0/0 |
 | ALB | Front-end servers | 80 | ALB egress to `web-sg`, `web-sg` ingress from `alb-sg` |
 | Front-end servers | Order services | 8080 | `web-sg` egress to `internal-sg`, `internal-sg` ingress from `web-sg` |
 | Any server | Internet (updates, SSM, AWS APIs) | 443, 80 outbound | SG egress + private route 0.0.0.0/0 to NAT |

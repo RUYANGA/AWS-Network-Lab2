@@ -10,6 +10,7 @@ parameters:
   LabName: Designing Secure Network for Onward Logistics Order System
   VpcCidr: 10.20.0.0/16
   NatGatewayMode: per-az             # per-az (survives AZ loss) | single (cheaper)
+  DomainName: ""                     # custom domain, e.g. orders.example.com ("" = HTTP on the ALB name)
   InstanceType: t3.micro             # use t2.micro if your account's Free Tier is t2
   FrontendMinSize: "2"
   FrontendMaxSize: "4"

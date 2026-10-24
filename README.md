@@ -128,6 +128,29 @@ The stack takes about 8 to 12 minutes; it completes only after both front-end se
 
 See `docs/demo-runbook.md` for the live review.
 
+## Custom domain and HTTPS (DNS at Hostinger or any provider)
+
+Set `DomainName` in `deployments/onward-dev-network.yaml` (for example `orders.example.com`) and merge to `main`. The stack then requests a free ACM certificate, adds an HTTPS listener on port 443 and redirects HTTP to HTTPS. DNS stays at your provider; you add two records there by hand.
+
+1. Merge the change. The stack update pauses on `FrontendCertificate` (CREATE_IN_PROGRESS) until the certificate is validated. Get the validation record:
+   ```bash
+   aws acm list-certificates --region eu-west-1 --certificate-statuses PENDING_VALIDATION \
+     --query "CertificateSummaryList[].CertificateArn" --output text \
+   | xargs -n1 aws acm describe-certificate --region eu-west-1 --certificate-arn \
+     --query "Certificate.DomainValidationOptions[].ResourceRecord" --output table
+   ```
+2. At the DNS provider (Hostinger: Domains > your domain > DNS / Nameservers > Manage DNS records), add a **CNAME** record:
+   - Name: the part of the record `Name` before your domain (for example `_3f1a2b...orders`)
+   - Target: the record `Value` (ends in `.acm-validations.aws`)
+   - Keep it in place: ACM uses it to renew the certificate automatically.
+3. Validation usually completes in 5 to 30 minutes and the stack update continues.
+4. Point the domain at the load balancer with a second **CNAME** record:
+   - Name: the subdomain (for example `orders`)
+   - Target: the stack output `LoadBalancerDnsName`
+5. Open the `FrontEndUrl` output (`https://<your domain>`).
+
+Use a subdomain such as `orders.example.com`. The root domain (`example.com`) cannot be a CNAME at most providers.
+
 ## Give engineers access
 
 Attach the stack output `SessionOperatorsPolicyArn` to the engineers' IAM Identity Center permission set or IAM group from Week 1. It allows `ssm:StartSession` only on instances tagged `Project=onward` and `Environment=dev`. Remove it to revoke access instantly.
