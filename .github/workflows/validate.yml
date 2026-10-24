@@ -1,0 +1,34 @@
+# Lints every template on pull requests so a broken template never reaches
+# main (and therefore never reaches Git sync).
+name: validate-templates
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  cfn-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cfn-lint
+      - name: Lint CloudFormation templates
+        run: |
+          shopt -s nullglob
+          files=(templates/*.yaml bootstrap/*.yaml)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No templates found yet, skipping cfn-lint"; exit 0
+          fi
+          cfn-lint "${files[@]}"
+      - name: Block inline IAM policies
+        run: |
+          if grep -nsE '^\s+Policies:' templates/*.yaml bootstrap/*.yaml; then
+            echo "Inline IAM policies are not allowed"; exit 1
+          fi
+      - name: Block SSH and RDP rules
+        run: |
+          if grep -nsE 'FromPort:\s*(22|3389)\b' templates/*.yaml; then
+            echo "Admin ports must not be opened"; exit 1
+          fi
