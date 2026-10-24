@@ -4,3 +4,8 @@
 .vscode/
 *.zip
 .env
+.env.*
+.aws/
+credentials
+*.pem
+*.key
