@@ -105,6 +105,17 @@ Resources:
               - logs:*
               - budgets:*
             Resource: "*"
+          - Sid: CertificatesForHttps
+            Effect: Allow
+            Action:
+              - acm:RequestCertificate
+              - acm:DescribeCertificate
+              - acm:DeleteCertificate
+              - acm:ListCertificates
+              - acm:AddTagsToCertificate
+              - acm:RemoveTagsFromCertificate
+              - acm:ListTagsForCertificate
+            Resource: "*"
           - Sid: ReadPublicAmiParameter
             Effect: Allow
             Action: [ssm:GetParameter, ssm:GetParameters]
