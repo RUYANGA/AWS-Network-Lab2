@@ -4,7 +4,7 @@
 # (2 failed health checks x 10 s) and the Auto Scaling group replaces it.
 # Usage: ./scripts/simulate-az-failure.sh [stack-name] [region]
 set -euo pipefail
-STACK="${1:-onward-dev-network}"
+STACK="${1:-onward-network}"
 REGION="${2:-eu-west-1}"
 export AWS_REGION="$REGION"
 

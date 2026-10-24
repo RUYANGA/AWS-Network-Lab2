@@ -9,7 +9,7 @@ flowchart TB
     git(["GitHub repo, main branch"])
 
     subgraph aws["AWS account, eu-west-1"]
-        cfn["CloudFormation Git sync<br/>stack onward-dev-network"]
+        cfn["CloudFormation Git sync<br/>stack onward-network"]
         ssm["Systems Manager<br/>Session Manager"]
         cw["CloudWatch Logs<br/>VPC Flow Logs"]
         budget["AWS Budgets<br/>onward-dev-network-budget"]

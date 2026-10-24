@@ -4,7 +4,7 @@ Run everything from a terminal with the AWS CLI v2 and the Session Manager plugi
 
 ```bash
 export AWS_REGION=eu-west-1
-STACK=onward-dev-network
+STACK=onward-network
 out() { aws cloudformation describe-stacks --stack-name $STACK --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
 URL=$(out FrontEndUrl); A=$(out InternalServerAId); B=$(out InternalServerBId)
 ```
