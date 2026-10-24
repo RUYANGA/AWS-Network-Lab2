@@ -28,7 +28,8 @@ AWS-Network-Lab2/
 │   └── onward-network.yaml            The network stack (everything in the VPC)
 └── scripts/
     ├── verify-checks.sh               Runs the client's checks against the live stack
-    └── simulate-az-failure.sh         Breaks one front-end server and shows the site stays up
+    ├── simulate-az-failure.sh         Breaks one front-end server and shows the site stays up
+    └── rebuild-gitsync.sh             Rebuilds the stack and reattaches Git sync after role changes
 ```
 
 ## What gets built
@@ -148,3 +149,27 @@ Tear down completely: delete `onward-network` first, then turn off termination p
 | `t3.micro` not Free Tier in your account | Set `InstanceType: t2.micro` in the deployment file |
 | Server not shown in Session Manager | Wait 2 to 3 minutes after launch; confirm the instance profile and that outbound 443 works through NAT |
 | Execution role denied on an IAM action | The stack name must start with `onward-` |
+| Git sync: not authorized to perform `sts:AssumeRole` | The bootstrap roles were replaced. See [Recover Git sync](#recover-git-sync) |
+
+## Recover Git sync
+
+If the stack's Git sync tab shows `CHECK_FOR_SYNC_BLOCKERS_FAILED` with *not authorized to perform: sts:AssumeRole*, the roles Git sync was set up with no longer exist. This happens when `onward-dev-gitsync-bootstrap` is deleted and recreated, because its roles get new names. A stack cannot be pointed at new roles in place, so it is rebuilt from `main`.
+
+1. Redeploy the bootstrap (step 2) and enable termination protection:
+   ```bash
+   aws cloudformation update-termination-protection --region eu-west-1 \
+     --enable-termination-protection --stack-name onward-dev-gitsync-bootstrap
+   ```
+2. Make sure a GitHub connection is `AVAILABLE`:
+   ```bash
+   aws codeconnections list-connections --region eu-west-1 \
+     --query "Connections[].[ConnectionName,ConnectionStatus,ConnectionArn]" --output table
+   ```
+   Activate the bootstrap's `onward-dev-github` connection in the console (step 3), or reuse another `AVAILABLE` connection with `CONNECTION_ARN`.
+3. Rebuild the stack and reattach Git sync (about 20 to 25 minutes):
+   ```bash
+   ./scripts/rebuild-gitsync.sh onward-network eu-west-1
+   # or: CONNECTION_ARN=arn:aws:codeconnections:... ./scripts/rebuild-gitsync.sh
+   ```
+
+The script reads parameters and tags from `deployments/onward-dev-network.yaml`, deletes the stack with the new execution role, recreates it, and points Git sync at the new Git sync role. It is safe to re-run if CloudShell disconnects.
