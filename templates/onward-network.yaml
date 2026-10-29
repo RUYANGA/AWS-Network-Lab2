@@ -942,67 +942,273 @@ Resources:
             <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Onward Logistics | Order System</title>
+            <meta name="theme-color" content="#0a2540">
+            <title>Onward Logistics | Freight, Warehousing and Delivery</title>
             <style>
-              :root { --bg:#f4f6f9; --surface:#ffffff; --ink:#0f1b2d; --muted:#5a6578; --line:#e3e7ee;
-                      --brand:#0b3b66; --brand-ink:#ffffff; --ok:#1a7f4b; --ok-bg:#e6f4ec; }
-              @media (prefers-color-scheme: dark) {
-                :root { --bg:#0d131c; --surface:#151d29; --ink:#e8edf4; --muted:#9aa6b8; --line:#263243;
-                        --brand:#0e2a47; --brand-ink:#e8edf4; --ok:#4cc38a; --ok-bg:#12301f; }
-              }
-              * { box-sizing:border-box; }
-              body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--bg); color:var(--ink);
-                     font-family:"Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif; line-height:1.5; }
-              header { background:var(--brand); color:var(--brand-ink); }
-              .bar { max-width:880px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-              .brand { font-weight:700; letter-spacing:.02em; }
-              .brand small { font-weight:400; opacity:.8; margin-left:8px; }
-              .status { display:inline-flex; align-items:center; gap:8px; font-size:.85rem; font-weight:600;
-                        background:var(--ok-bg); color:var(--ok); padding:4px 12px; border-radius:999px; }
-              .status i { width:8px; height:8px; border-radius:50%; background:var(--ok); }
-              main { flex:1; width:100%; max-width:880px; margin:0 auto; padding:40px 20px; }
-              .eyebrow { margin:0 0 8px; font-size:.8rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
-              h1 { margin:0 0 12px; font-size:clamp(1.6rem, 4.5vw, 2.4rem); line-height:1.2; letter-spacing:-.01em; }
-              .byline { margin:0 0 32px; color:var(--muted); }
-              .byline strong { color:var(--ink); }
-              .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:0 0 32px; }
-              .tile { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; }
-              .tile span { display:block; font-size:.8rem; color:var(--muted); margin-bottom:4px; }
-              .tile strong { font-size:1rem; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
-              h2 { font-size:1rem; margin:0 0 12px; }
-              ul { margin:0; padding:0; list-style:none; display:grid; gap:8px; }
-              li { background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px 16px; }
-              li b { display:block; }
-              li span { color:var(--muted); font-size:.9rem; }
-              footer { border-top:1px solid var(--line); color:var(--muted); font-size:.85rem; }
-              footer div { max-width:880px; margin:0 auto; padding:16px 20px; }
+            :root{--bg:#f6f8fb;--surface:#fff;--ink:#0a1628;--muted:#5b6779;--line:#e3e8ef;--navy:#0a2540;--navy-2:#123a63;--blue:#1d6fd8;--accent:#f5a524;--accent-ink:#1f1300;--ok:#15803d;--ok-bg:#e7f6ec;--r:14px;--shadow:0 1px 2px rgba(10,22,40,.06),0 8px 24px rgba(10,22,40,.06)}
+            @media (prefers-color-scheme:dark){
+            :root{--bg:#070d16;--surface:#0f1826;--ink:#e7edf5;--muted:#97a3b6;--line:#1f2b3c;--navy:#06182b;--navy-2:#0d2c4c;--blue:#5aa2ff;--ok:#4ade80;--ok-bg:#0f2a1a;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3)}
+            }
+            *{box-sizing:border-box}
+            html{scroll-behavior:smooth}
+            body{margin:0;background:var(--bg);color:var(--ink);line-height:1.6;font-family:system-ui,"Segoe UI",Roboto,Ubuntu,Arial,sans-serif}
+            a{color:inherit;text-decoration:none}
+            a:focus-visible{outline:3px solid var(--accent);outline-offset:3px;border-radius:6px}
+            svg{display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+            .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+            .skip{position:absolute;left:-999px;top:8px;background:var(--accent);color:var(--accent-ink);padding:8px 14px;border-radius:8px;z-index:20}
+            .skip:focus{left:8px}
+            header{position:sticky;top:0;z-index:10;background:rgba(10,37,64,.92);backdrop-filter:blur(10px);color:#fff;border-bottom:1px solid rgba(255,255,255,.08)}
+            .nav{display:flex;align-items:center;justify-content:space-between;gap:24px;height:68px}
+            .logo{display:flex;white-space:nowrap;align-items:center;gap:10px;font-weight:700;font-size:1.08rem;letter-spacing:-.01em}
+            .mark{display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink)}
+            .links{display:flex;align-items:center;gap:28px;margin:0;padding:0;list-style:none;font-size:.94rem}
+            .links a{opacity:.8;transition:opacity .15s}
+            .links a:hover{opacity:1}
+            .btn{display:inline-flex;white-space:nowrap;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;font-weight:600;font-size:.95rem;transition:transform .15s,box-shadow .15s,background .15s}
+            .btn:hover{transform:translateY(-1px)}
+            .btn-accent{background:var(--accent);color:var(--accent-ink);box-shadow:0 6px 18px rgba(245,165,36,.3)}
+            .btn-line{border:1px solid rgba(255,255,255,.28);color:#fff}
+            .btn-line:hover{background:rgba(255,255,255,.08)}
+            .links .btn{opacity:1;padding:9px 16px}
+            .hero{background:radial-gradient(1200px 500px at 85% -10%,rgba(29,111,216,.45),transparent 60%),linear-gradient(160deg,var(--navy),var(--navy-2));color:#fff;padding:88px 0 104px;overflow:hidden}
+            .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+            h1{margin:0 0 20px;font-size:clamp(2.2rem,5.2vw,3.6rem);line-height:1.08;letter-spacing:-.03em}
+            h1 span{color:var(--accent)}
+            .lead{margin:0 0 32px;max-width:540px;font-size:1.12rem;color:rgba(255,255,255,.78)}
+            .cta{display:flex;flex-wrap:wrap;gap:12px}
+            .trust{display:flex;flex-wrap:wrap;gap:8px 24px;margin:40px 0 0;padding:0;list-style:none;font-size:.88rem;color:rgba(255,255,255,.7)}
+            .trust li{display:flex;align-items:center;gap:8px}
+            .trust li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+            .ship{background:var(--surface);color:var(--ink);border-radius:18px;padding:24px;box-shadow:0 30px 60px rgba(0,0,0,.35)}
+            .ship-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+            .ship small{display:block;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+            .ship-top strong{font-size:1.1rem;font-variant-numeric:tabular-nums}
+            .badge{padding:4px 10px;border-radius:999px;font-size:.78rem;font-weight:700;background:rgba(29,111,216,.12);color:var(--blue);white-space:nowrap}
+            .track{margin:0;padding:0;list-style:none}
+            .track li{position:relative;padding:0 0 16px 28px;font-size:.92rem}
+            .track li::before{content:"";position:absolute;left:4px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--line)}
+            .track li::after{content:"";position:absolute;left:8px;top:20px;bottom:0;width:2px;background:var(--line)}
+            .track li:last-child{padding-bottom:0}
+            .track li:last-child::after{display:none}
+            .track .done::before{background:var(--ok)}
+            .track .now::before{background:var(--blue);box-shadow:0 0 0 4px rgba(29,111,216,.2)}
+            .track span{display:block;font-size:.8rem;color:var(--muted)}
+            .ship-note{margin:16px 0 0;font-size:.75rem;color:var(--muted)}
+            .block{padding:96px 0}
+            .head{max-width:620px;margin:0 0 48px}
+            .kicker{margin:0 0 10px;font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue)}
+            h2{margin:0 0 12px;font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.15;letter-spacing:-.02em}
+            .head p:last-child{margin:0;color:var(--muted);font-size:1.05rem}
+            .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+            .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;transition:transform .2s,box-shadow .2s,border-color .2s}
+            .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:transparent}
+            .icon{display:grid;place-items:center;width:46px;height:46px;margin-bottom:18px;border-radius:12px;background:rgba(29,111,216,.1);color:var(--blue)}
+            .card h3{margin:0 0 8px;font-size:1.08rem}
+            .card p{margin:0;color:var(--muted);font-size:.95rem}
+            .alt{background:var(--surface);border-block:1px solid var(--line)}
+            .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:0;padding:0;list-style:none;counter-reset:s}
+            .steps li{position:relative;counter-increment:s}
+            .steps li::before{content:counter(s,decimal-leading-zero);display:grid;place-items:center;width:48px;height:48px;margin-bottom:20px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;position:relative;z-index:1}
+            .steps li::after{content:"";position:absolute;top:24px;left:56px;right:-16px;height:2px;background:var(--line)}
+            .steps li:last-child::after{display:none}
+            .steps b{display:block;margin-bottom:6px;font-size:1.05rem}
+            .steps span{color:var(--muted);font-size:.95rem}
+            .panel{background:linear-gradient(160deg,var(--navy),var(--navy-2));color:#fff;border-radius:20px;padding:40px;box-shadow:var(--shadow)}
+            .panel-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:32px}
+            .panel h2{font-size:clamp(1.4rem,2.8vw,1.9rem);margin:0 0 6px}
+            .panel-top p{margin:0;color:rgba(255,255,255,.72)}
+            .panel-top strong{color:#fff}
+            .live{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;border-radius:999px;font-size:.85rem;font-weight:600;background:rgba(74,222,128,.12);color:#86efac;border:1px solid rgba(74,222,128,.25)}
+            .dot{width:9px;height:9px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+            @keyframes pulse{
+            0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}
+            70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}
+            100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}
+            }
+            .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:rgba(255,255,255,.1);border-radius:var(--r);overflow:hidden}
+            .stat{background:rgba(6,24,43,.55);padding:20px}
+            .stat span{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.6);margin-bottom:6px}
+            .stat strong{font-size:1.05rem;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+            .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin:32px 0 0;padding:28px 0 0;list-style:none;border-top:1px solid rgba(255,255,255,.12)}
+            .pillars b{display:block;margin-bottom:4px}
+            .pillars span{font-size:.92rem;color:rgba(255,255,255,.7)}
+            .hint{margin:24px 0 0;font-size:.88rem;color:rgba(255,255,255,.6)}
+            footer{background:var(--navy);color:rgba(255,255,255,.72);padding:64px 0 32px;font-size:.92rem}
+            .foot{display:grid;grid-template-columns:2fr 1fr;gap:40px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.1)}
+            .foot .logo{color:#fff;margin-bottom:14px}
+            .foot p{margin:0;max-width:340px}
+            .foot h4{margin:0 0 14px;color:#fff;font-size:.85rem;text-transform:uppercase;letter-spacing:.1em}
+            .foot ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+            .foot a:hover{color:#fff}
+            .legal{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:24px;font-size:.85rem}
+            @media (max-width:900px){
+            .hero-grid{grid-template-columns:1fr}
+            .steps{grid-template-columns:repeat(2,1fr)}
+            .steps li::after{display:none}
+            }
+            @media (max-width:640px){
+            .links li:not(:last-child){display:none}
+            .hero{padding:56px 0 72px}
+            .block{padding:64px 0}
+            .steps,.foot{grid-template-columns:1fr}
+            .panel{padding:28px 20px}
+            }
+            @media (prefers-reduced-motion:reduce){
+            *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
+            }
             </style>
             </head>
             <body>
-              <header>
-                <div class="bar">
-                  <span class="brand">Onward Logistics<small>Order System</small></span>
-                  <span class="status"><i aria-hidden="true"></i>Operational</span>
-                </div>
-              </header>
-              <main>
-                <p class="eyebrow">Network &amp; Security on AWS</p>
-                <h1>${LabName}</h1>
-                <p class="byline">Designed and delivered by <strong>${OwnerName}</strong></p>
-                <section class="grid" aria-label="Serving instance">
-                  <div class="tile"><span>Served by</span><strong>$IID</strong></div>
-                  <div class="tile"><span>Availability Zone</span><strong>$AZ</strong></div>
-                  <div class="tile"><span>Region</span><strong>${AWS::Region}</strong></div>
-                  <div class="tile"><span>Environment</span><strong>${ProjectName}-${Environment}</strong></div>
-                </section>
-                <h2>How this page reaches you</h2>
-                <ul>
-                  <li><b>Highly available</b><span>An Application Load Balancer spreads traffic across servers in two Availability Zones.</span></li>
-                  <li><b>Private by default</b><span>Web and order servers sit in private subnets with no public IP addresses.</span></li>
-                  <li><b>No open admin ports</b><span>Engineers connect through AWS Systems Manager Session Manager, not SSH.</span></li>
-                </ul>
-              </main>
-              <footer><div>Refresh the page to see requests balanced across Availability Zones.</div></footer>
+            <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="truck" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></symbol></svg>
+            <a class="skip" href="#main">Skip to content</a>
+            <header>
+            <div class="wrap nav">
+            <a class="logo" href="#main" aria-label="Onward Logistics home">
+            <span class="mark"><svg width="20" height="20" aria-hidden="true"><use href="#truck"/></svg></span>
+            Onward Logistics
+            </a>
+            <nav aria-label="Main">
+            <ul class="links">
+            <li><a href="#services">Services</a></li>
+            <li><a href="#process">How it works</a></li>
+            <li><a href="#platform">Platform</a></li>
+            <li><a class="btn btn-accent" href="#status">System status</a></li>
+            </ul>
+            </nav>
+            </div>
+            </header>
+
+            <main id="main">
+            <section class="hero">
+            <div class="wrap hero-grid">
+            <div>
+            <h1>Freight that keeps your business moving <span>onward.</span></h1>
+            <p class="lead">Road freight, warehousing and last-mile delivery for merchants of every size, planned, shipped and tracked on one secure order system.</p>
+            <div class="cta">
+            <a class="btn btn-accent" href="#services">Explore services</a>
+            <a class="btn btn-line" href="#process">See how it works</a>
+            </div>
+            <ul class="trust">
+            <li>Two Availability Zones</li>
+            <li>Encrypted storage</li>
+            <li>Monitored around the clock</li>
+            </ul>
+            </div>
+            <aside class="ship" aria-label="Example shipment">
+            <div class="ship-top">
+            <div><small>Shipment</small><strong>ON-20481</strong></div>
+            <span class="badge">In transit</span>
+            </div>
+            <ol class="track">
+            <li class="done">Order received<span>Merchant order confirmed</span></li>
+            <li class="done">Picked and packed<span>Ready for dispatch</span></li>
+            <li class="now">On the road<span>Between regional hubs</span></li>
+            <li>Out for delivery<span>Last-mile team</span></li>
+            </ol>
+            <p class="ship-note">Example shipment for illustration.</p>
+            </aside>
+            </div>
+            </section>
+
+            <section class="block" id="services">
+            <div class="wrap">
+            <div class="head">
+            <p class="kicker">Services</p>
+            <h2>Everything between the shelf and the doorstep</h2>
+            <p>End-to-end logistics, managed through a single order system.</p>
+            </div>
+            <div class="cards">
+            <article class="card">
+            <div class="icon"><svg width="24" height="24" aria-hidden="true"><use href="#truck"/></svg></div>
+            <h3>Road freight</h3>
+            <p>Full and part loads between cities on planned routes, with agreed pickup windows.</p>
+            </article>
+            <article class="card">
+            <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-6 9 6v10H3zM8 20v-6h8v6"/></svg></div>
+            <h3>Warehousing</h3>
+            <p>Secure storage, live stock control and pick-and-pack ready for same-day dispatch.</p>
+            </article>
+            <article class="card">
+            <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
+            <h3>Last-mile delivery</h3>
+            <p>Doorstep delivery with proof of delivery and clear updates for your customers.</p>
+            </article>
+            <article class="card">
+            <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div>
+            <h3>Order management</h3>
+            <p>One system for merchants to place, follow and manage every order.</p>
+            </article>
+            </div>
+            </div>
+            </section>
+
+            <section class="block alt" id="process">
+            <div class="wrap">
+            <div class="head">
+            <p class="kicker">How it works</p>
+            <h2>From order to doorstep in four steps</h2>
+            <p>A simple, predictable process your customers can rely on.</p>
+            </div>
+            <ol class="steps">
+            <li><b>Place the order</b><span>Merchants submit orders through the Onward order system.</span></li>
+            <li><b>Pick and pack</b><span>Our warehouse team prepares the shipment the same day.</span></li>
+            <li><b>Ship</b><span>Freight moves on planned routes between our hubs.</span></li>
+            <li><b>Deliver</b><span>The last-mile team delivers and confirms receipt.</span></li>
+            </ol>
+            </div>
+            </section>
+
+            <section class="block" id="platform">
+            <div class="wrap">
+            <div class="head">
+            <p class="kicker">Platform</p>
+            <h2>Built to stay up and stay secure</h2>
+            <p>The order system runs on AWS, designed for availability and locked down by default.</p>
+            </div>
+            <div class="panel" id="status">
+            <div class="panel-top">
+            <div>
+            <h2>${LabName}</h2>
+            <p>Designed and delivered by <strong>${OwnerName}</strong></p>
+            </div>
+            <span class="live"><span class="dot" aria-hidden="true"></span>All systems operational</span>
+            </div>
+            <div class="stats" aria-label="Serving instance">
+            <div class="stat"><span>Served by</span><strong>$IID</strong></div>
+            <div class="stat"><span>Availability Zone</span><strong>$AZ</strong></div>
+            <div class="stat"><span>Region</span><strong>${AWS::Region}</strong></div>
+            <div class="stat"><span>Environment</span><strong>${ProjectName}-${Environment}</strong></div>
+            </div>
+            <ul class="pillars">
+            <li><b>Highly available</b><span>An Application Load Balancer spreads traffic across servers in two Availability Zones.</span></li>
+            <li><b>Private by default</b><span>Web and order servers sit in private subnets with no public IP addresses.</span></li>
+            <li><b>No open admin ports</b><span>Engineers connect through AWS Systems Manager Session Manager, not SSH.</span></li>
+            </ul>
+            <p class="hint">Refresh the page to see requests balanced across Availability Zones.</p>
+            </div>
+            </div>
+            </section>
+            </main>
+
+            <footer>
+            <div class="wrap">
+            <div class="foot">
+            <div>
+            <a class="logo" href="#main">Onward Logistics</a>
+            <p>Freight, warehousing and delivery for merchants who need every order to arrive on time.</p>
+            </div>
+            <div>
+            <h4>Explore</h4>
+            <ul><li><a href="#services">Services</a></li><li><a href="#process">How it works</a></li><li><a href="#platform">Platform</a></li><li><a href="#status">System status</a></li></ul>
+            </div>
+            </div>
+            <div class="legal">
+            <span>&copy; Onward Logistics. All rights reserved.</span>
+            <span>Running on AWS in ${AWS::Region}</span>
+            </div>
+            </div>
+            </footer>
             </body>
             </html>
             HTML
