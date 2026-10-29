@@ -4,7 +4,7 @@ Every resource in the diagram is created by `templates/onward-network.yaml`.
 
 ![onward-dev network architecture](architecture.png)
 
-The source is [architecture.drawio](architecture.drawio). Open it in [diagrams.net](https://app.diagrams.net) or the Draw.io VS Code extension, edit it, then export it again as `architecture.png` (File > Export as > PNG, zoom 200%).
+The source is [architecture.drawio](architecture.drawio). To edit it in VS Code, install the recommended [Draw.io Integration](https://marketplace.visualstudio.com/items?itemName=hediet.vscode-drawio) extension (VS Code offers it when you open the repo, from `.vscode/extensions.json`), then open the file. You can also use [diagrams.net](https://app.diagrams.net). After editing, export it again as `architecture.png` (File > Export as > PNG, zoom 200%).
 
 ## Traffic rules
 
