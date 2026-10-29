@@ -6,18 +6,6 @@ Description: >-
   NAT egress for updates, SSM Session Manager administration (no SSH, no keys),
   VPC Flow Logs and a budget alert. No inline IAM policies are used.
 
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label: { default: "Company standards (naming and tags)" }
-        Parameters: [ProjectName, Environment, OwnerName, LabName]
-      - Label: { default: "Network" }
-        Parameters: [VpcCidr, NatGatewayMode, DomainName]
-      - Label: { default: "Compute" }
-        Parameters: [InstanceType, LatestAmiId, FrontendMinSize, FrontendMaxSize]
-      - Label: { default: "Cost control" }
-        Parameters: [BudgetEmail, MonthlyBudgetUsd]
-
 # Every parameter has a default: CloudFormation Git sync cannot save a stack
 # whose parameters lack defaults. Real values are set in deployments/*.yaml.
 Parameters:
@@ -29,7 +17,10 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, test, prod]
+    AllowedValues:
+      - dev
+      - test
+      - prod
     Description: Environment name used in naming (onward-environment-purpose) and tags.
   OwnerName:
     Type: String
@@ -50,14 +41,18 @@ Parameters:
   NatGatewayMode:
     Type: String
     Default: per-az
-    AllowedValues: [per-az, single]
+    AllowedValues:
+      - per-az
+      - single
     Description: >-
       per-az = one NAT Gateway per AZ (survives an AZ loss, recommended for prod).
       single = one shared NAT Gateway (about 39 USD/month cheaper, egress fails if its AZ fails).
   InstanceType:
     Type: String
     Default: t3.micro
-    AllowedValues: [t3.micro, t2.micro]
+    AllowedValues:
+      - t3.micro
+      - t2.micro
     Description: Free Tier eligible instance type (t3.micro for most new accounts, t2.micro for older ones).
   LatestAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -93,9 +88,17 @@ Parameters:
       adds an HTTPS listener and redirects HTTP to HTTPS. Leave empty for HTTP on the ALB name.
 
 Conditions:
-  NatPerAz: !Equals [!Ref NatGatewayMode, per-az]
-  HasDomain: !Not [!Equals [!Ref DomainName, ""]]
-  CreateBudget: !Not [!Equals [!Ref BudgetEmail, ""]]
+  NatPerAz: !Equals
+    - !Ref NatGatewayMode
+    - per-az
+  HasDomain: !Not
+    - !Equals
+      - !Ref DomainName
+      - ""
+  CreateBudget: !Not
+    - !Equals
+      - !Ref BudgetEmail
+      - ""
 
 Resources:
   # ---------------------------------------------------------------------------
@@ -111,19 +114,27 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-vpc" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-vpc"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-igw" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-igw"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -135,85 +146,157 @@ Resources:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: !Select [0, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 0
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-public-a" }
-        - { Key: Tier, Value: public }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-public-a"
+        - Key: Tier
+          Value: public
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [1, !GetAZs ""]
-      CidrBlock: !Select [1, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 1
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-public-b" }
-        - { Key: Tier, Value: public }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-public-b"
+        - Key: Tier
+          Value: public
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   WebSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: !Select [2, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 2
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-web-a" }
-        - { Key: Tier, Value: web }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-web-a"
+        - Key: Tier
+          Value: web
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   WebSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [1, !GetAZs ""]
-      CidrBlock: !Select [3, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 3
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-web-b" }
-        - { Key: Tier, Value: web }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-web-b"
+        - Key: Tier
+          Value: web
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   InternalSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: !Select [4, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 4
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-internal-a" }
-        - { Key: Tier, Value: internal }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-internal-a"
+        - Key: Tier
+          Value: internal
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   InternalSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref Vpc
-      AvailabilityZone: !Select [1, !GetAZs ""]
-      CidrBlock: !Select [5, !Cidr [!Ref VpcCidr, 6, 8]]
+      AvailabilityZone: !Select
+        - 1
+        - !GetAZs ""
+      CidrBlock: !Select
+        - 5
+        - !Cidr
+          - !Ref VpcCidr
+          - 6
+          - 8
       MapPublicIpOnLaunch: false
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-internal-b" }
-        - { Key: Tier, Value: internal }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-internal-b"
+        - Key: Tier
+          Value: internal
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # ---------------------------------------------------------------------------
   # Routing
@@ -223,10 +306,14 @@ Resources:
     Properties:
       VpcId: !Ref Vpc
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-public-rt" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-public-rt"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   PublicDefaultRoute:
     Type: AWS::EC2::Route
@@ -254,10 +341,14 @@ Resources:
     Properties:
       Domain: vpc
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-nat-eip-a" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-nat-eip-a"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   NatGatewayA:
     Type: AWS::EC2::NatGateway
@@ -265,10 +356,14 @@ Resources:
       AllocationId: !GetAtt NatEipA.AllocationId
       SubnetId: !Ref PublicSubnetA
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-nat-a" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-nat-a"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   NatEipB:
     Type: AWS::EC2::EIP
@@ -277,10 +372,14 @@ Resources:
     Properties:
       Domain: vpc
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-nat-eip-b" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-nat-eip-b"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   NatGatewayB:
     Type: AWS::EC2::NatGateway
@@ -289,30 +388,42 @@ Resources:
       AllocationId: !GetAtt NatEipB.AllocationId
       SubnetId: !Ref PublicSubnetB
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-nat-b" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-nat-b"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   PrivateRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref Vpc
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-private-rt-a" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-private-rt-a"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   PrivateRouteTableB:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref Vpc
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-private-rt-b" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-private-rt-b"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # Outbound only: private subnets reach the internet through NAT. There is no
   # route from the internet into these subnets.
@@ -328,7 +439,10 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTableB
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !If [NatPerAz, !Ref NatGatewayB, !Ref NatGatewayA]
+      NatGatewayId: !If
+        - NatPerAz
+        - !Ref NatGatewayB
+        - !Ref NatGatewayA
 
   WebSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -375,10 +489,14 @@ Resources:
       LogGroupName: !Sub "/${ProjectName}/${Environment}/vpc-flow-logs"
       RetentionInDays: 14
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-vpc-flow-logs" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-vpc-flow-logs"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   FlowLogsDeliveryPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -409,7 +527,8 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: { Service: vpc-flow-logs.amazonaws.com }
+            Principal:
+              Service: vpc-flow-logs.amazonaws.com
             Action: sts:AssumeRole
             Condition:
               StringEquals:
@@ -417,10 +536,14 @@ Resources:
       ManagedPolicyArns:
         - !Ref FlowLogsDeliveryPolicy
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-flow-logs-role" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-flow-logs-role"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   VpcFlowLog:
     Type: AWS::EC2::FlowLog
@@ -433,10 +556,14 @@ Resources:
       DeliverLogsPermissionArn: !GetAtt FlowLogsRole.Arn
       MaxAggregationInterval: 600
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-vpc-flow-log" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-vpc-flow-log"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # ---------------------------------------------------------------------------
   # Security groups (chained by reference, no port 22 anywhere)
@@ -450,13 +577,25 @@ Resources:
       GroupDescription: Internal order services. Inbound only from the front-end tier. No SSH.
       VpcId: !Ref Vpc
       SecurityGroupEgress:
-        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0, Description: "HTTPS out: package repos, SSM, AWS APIs" }
-        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: "HTTP out: package mirrors that use plain HTTP" }
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: "HTTPS out: package repos, SSM, AWS APIs"
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: "HTTP out: package mirrors that use plain HTTP"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-internal-sg" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-internal-sg"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   FrontendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -465,14 +604,30 @@ Resources:
       GroupDescription: Front-end servers. Inbound HTTP only from the ALB. No SSH.
       VpcId: !Ref Vpc
       SecurityGroupEgress:
-        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0, Description: "HTTPS out: package repos, SSM, AWS APIs" }
-        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: "HTTP out: package mirrors that use plain HTTP" }
-        - { IpProtocol: tcp, FromPort: 8080, ToPort: 8080, DestinationSecurityGroupId: !Ref InternalSecurityGroup, Description: "Calls to internal order services" }
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: "HTTPS out: package repos, SSM, AWS APIs"
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: "HTTP out: package mirrors that use plain HTTP"
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          DestinationSecurityGroupId: !Ref InternalSecurityGroup
+          Description: "Calls to internal order services"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web-sg" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-web-sg"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   AlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -481,18 +636,34 @@ Resources:
       GroupDescription: Public load balancer. HTTP from the internet, forwards only to front-end servers.
       VpcId: !Ref Vpc
       SecurityGroupIngress:
-        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0, Description: "Merchants and customers (HTTP)" }
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: "Merchants and customers (HTTP)"
         - !If
           - HasDomain
-          - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0, Description: "Merchants and customers (HTTPS)" }
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 0.0.0.0/0
+            Description: "Merchants and customers (HTTPS)"
           - !Ref AWS::NoValue
       SecurityGroupEgress:
-        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, DestinationSecurityGroupId: !Ref FrontendSecurityGroup, Description: "Forward to front-end servers" }
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          DestinationSecurityGroupId: !Ref FrontendSecurityGroup
+          Description: "Forward to front-end servers"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-alb-sg" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-alb-sg"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # Ingress rules as separate resources to avoid circular references.
   FrontendIngressFromAlb:
@@ -526,20 +697,26 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: { Service: ec2.amazonaws.com }
+            Principal:
+              Service: ec2.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-server-role" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-server-role"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   ServerInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Roles: [!Ref ServerRole]
+      Roles:
+        - !Ref ServerRole
 
   # Engineers' side of "no shared keys": attach this policy to the engineers'
   # IAM Identity Center permission set or IAM group from Week 1. It only allows
@@ -565,7 +742,9 @@ Resources:
             Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}::document/SSM-SessionManagerRunShell"
           - Sid: ManageOwnSessions
             Effect: Allow
-            Action: [ssm:TerminateSession, ssm:ResumeSession]
+            Action:
+              - ssm:TerminateSession
+              - ssm:ResumeSession
             Resource: !Sub "arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:session/${!aws:userid}-*"
           - Sid: SeeServers
             Effect: Allow
@@ -587,17 +766,27 @@ Resources:
       Type: application
       Scheme: internet-facing
       IpAddressType: ipv4
-      Subnets: [!Ref PublicSubnetA, !Ref PublicSubnetB]
-      SecurityGroups: [!Ref AlbSecurityGroup]
+      Subnets:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
       LoadBalancerAttributes:
-        - { Key: routing.http.drop_invalid_header_fields.enabled, Value: "true" }
-        - { Key: deletion_protection.enabled, Value: "false" }
-        - { Key: load_balancing.cross_zone.enabled, Value: "true" }
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: "true"
+        - Key: deletion_protection.enabled
+          Value: "false"
+        - Key: load_balancing.cross_zone.enabled
+          Value: "true"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-alb" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-alb"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -613,14 +802,20 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 2
-      Matcher: { HttpCode: "200" }
+      Matcher:
+        HttpCode: "200"
       TargetGroupAttributes:
-        - { Key: deregistration_delay.timeout_seconds, Value: "30" }
+        - Key: deregistration_delay.timeout_seconds
+          Value: "30"
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web-tg" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-web-tg"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   HttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -632,7 +827,13 @@ Resources:
         - !If
           - HasDomain
           - Type: redirect
-            RedirectConfig: { Protocol: HTTPS, Port: "443", Host: "#{host}", Path: "/#{path}", Query: "#{query}", StatusCode: HTTP_301 }
+            RedirectConfig:
+              Protocol: HTTPS
+              Port: "443"
+              Host: "#{host}"
+              Path: "/#{path}"
+              Query: "#{query}"
+              StatusCode: HTTP_301
           - Type: forward
             TargetGroupArn: !Ref FrontendTargetGroup
 
@@ -645,10 +846,14 @@ Resources:
       DomainName: !Ref DomainName
       ValidationMethod: DNS
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-cert" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-cert"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   HttpsListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -671,37 +876,55 @@ Resources:
       TagSpecifications:
         - ResourceType: launch-template
           Tags:
-            - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web-lt" }
-            - { Key: Project, Value: !Ref ProjectName }
-            - { Key: Owner, Value: !Ref OwnerName }
-            - { Key: Environment, Value: !Ref Environment }
+            - Key: Name
+              Value: !Sub "${ProjectName}-${Environment}-orders-web-lt"
+            - Key: Project
+              Value: !Ref ProjectName
+            - Key: Owner
+              Value: !Ref OwnerName
+            - Key: Environment
+              Value: !Ref Environment
       LaunchTemplateData:
         ImageId: !Ref LatestAmiId
         InstanceType: !Ref InstanceType
         IamInstanceProfile:
           Arn: !GetAtt ServerInstanceProfile.Arn
-        SecurityGroupIds: [!Ref FrontendSecurityGroup]
+        SecurityGroupIds:
+          - !Ref FrontendSecurityGroup
         MetadataOptions:
           HttpTokens: required
           HttpEndpoint: enabled
           HttpPutResponseHopLimit: 1
         BlockDeviceMappings:
           - DeviceName: /dev/xvda
-            Ebs: { VolumeSize: 8, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true }
+            Ebs:
+              VolumeSize: 8
+              VolumeType: gp3
+              Encrypted: true
+              DeleteOnTermination: true
         TagSpecifications:
           - ResourceType: instance
             Tags:
-              - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web" }
-              - { Key: Tier, Value: web }
-              - { Key: Project, Value: !Ref ProjectName }
-              - { Key: Owner, Value: !Ref OwnerName }
-              - { Key: Environment, Value: !Ref Environment }
+              - Key: Name
+                Value: !Sub "${ProjectName}-${Environment}-orders-web"
+              - Key: Tier
+                Value: web
+              - Key: Project
+                Value: !Ref ProjectName
+              - Key: Owner
+                Value: !Ref OwnerName
+              - Key: Environment
+                Value: !Ref Environment
           - ResourceType: volume
             Tags:
-              - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web-volume" }
-              - { Key: Project, Value: !Ref ProjectName }
-              - { Key: Owner, Value: !Ref OwnerName }
-              - { Key: Environment, Value: !Ref Environment }
+              - Key: Name
+                Value: !Sub "${ProjectName}-${Environment}-orders-web-volume"
+              - Key: Project
+                Value: !Ref ProjectName
+              - Key: Owner
+                Value: !Ref OwnerName
+              - Key: Environment
+                Value: !Ref Environment
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
@@ -812,18 +1035,29 @@ Resources:
       MinSize: !Ref FrontendMinSize
       MaxSize: !Ref FrontendMaxSize
       DesiredCapacity: !Ref FrontendMinSize
-      VPCZoneIdentifier: [!Ref WebSubnetA, !Ref WebSubnetB]
+      VPCZoneIdentifier:
+        - !Ref WebSubnetA
+        - !Ref WebSubnetB
       LaunchTemplate:
         LaunchTemplateId: !Ref FrontendLaunchTemplate
         Version: !GetAtt FrontendLaunchTemplate.LatestVersionNumber
-      TargetGroupARNs: [!Ref FrontendTargetGroup]
+      TargetGroupARNs:
+        - !Ref FrontendTargetGroup
       HealthCheckType: ELB
       HealthCheckGracePeriod: 180
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-web", PropagateAtLaunch: true }
-        - { Key: Project, Value: !Ref ProjectName, PropagateAtLaunch: true }
-        - { Key: Owner, Value: !Ref OwnerName, PropagateAtLaunch: true }
-        - { Key: Environment, Value: !Ref Environment, PropagateAtLaunch: true }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-web"
+          PropagateAtLaunch: true
+        - Key: Project
+          Value: !Ref ProjectName
+          PropagateAtLaunch: true
+        - Key: Owner
+          Value: !Ref OwnerName
+          PropagateAtLaunch: true
+        - Key: Environment
+          Value: !Ref Environment
+          PropagateAtLaunch: true
 
   # Sales-day peaks: add servers when average CPU passes 60 percent.
   FrontendCpuScalingPolicy:
@@ -841,17 +1075,26 @@ Resources:
   # ---------------------------------------------------------------------------
   InternalServerA:
     Type: AWS::EC2::Instance
-    DependsOn: [PrivateDefaultRouteA, InternalSubnetARouteTableAssociation]
+    DependsOn:
+      - PrivateDefaultRouteA
+      - InternalSubnetARouteTableAssociation
     Properties:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
       SubnetId: !Ref InternalSubnetA
-      SecurityGroupIds: [!Ref InternalSecurityGroup]
+      SecurityGroupIds:
+        - !Ref InternalSecurityGroup
       IamInstanceProfile: !Ref ServerInstanceProfile
-      MetadataOptions: { HttpTokens: required, HttpEndpoint: enabled }
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: 8, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true }
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -884,25 +1127,39 @@ Resources:
           systemctl daemon-reload
           systemctl enable --now onward-orders
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-internal-a" }
-        - { Key: Tier, Value: internal }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-internal-a"
+        - Key: Tier
+          Value: internal
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   InternalServerB:
     Type: AWS::EC2::Instance
-    DependsOn: [PrivateDefaultRouteB, InternalSubnetBRouteTableAssociation]
+    DependsOn:
+      - PrivateDefaultRouteB
+      - InternalSubnetBRouteTableAssociation
     Properties:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
       SubnetId: !Ref InternalSubnetB
-      SecurityGroupIds: [!Ref InternalSecurityGroup]
+      SecurityGroupIds:
+        - !Ref InternalSecurityGroup
       IamInstanceProfile: !Ref ServerInstanceProfile
-      MetadataOptions: { HttpTokens: required, HttpEndpoint: enabled }
+      MetadataOptions:
+        HttpTokens: required
+        HttpEndpoint: enabled
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
-          Ebs: { VolumeSize: 8, VolumeType: gp3, Encrypted: true, DeleteOnTermination: true }
+          Ebs:
+            VolumeSize: 8
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -935,11 +1192,16 @@ Resources:
           systemctl daemon-reload
           systemctl enable --now onward-orders
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-orders-internal-b" }
-        - { Key: Tier, Value: internal }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-orders-internal-b"
+        - Key: Tier
+          Value: internal
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # ---------------------------------------------------------------------------
   # Cost control: budget alert for the Finance Lead
@@ -962,14 +1224,16 @@ Resources:
             Threshold: 80
             ThresholdType: PERCENTAGE
           Subscribers:
-            - { SubscriptionType: EMAIL, Address: !Ref BudgetEmail }
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
         - Notification:
             NotificationType: FORECASTED
             ComparisonOperator: GREATER_THAN
             Threshold: 100
             ThresholdType: PERCENTAGE
           Subscribers:
-            - { SubscriptionType: EMAIL, Address: !Ref BudgetEmail }
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
 
 Outputs:
   FrontEndUrl:
