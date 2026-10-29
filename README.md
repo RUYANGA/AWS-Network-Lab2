@@ -17,7 +17,9 @@ AWS-Network-Lab2/
 │       └── secret-scan.yml            CI: gitleaks, blocks committed credentials
 ├── docs/
 │   ├── discovery.md                   Stage 1 report (commit this FIRST)
-│   ├── architecture.md                Mermaid diagram, traffic rules, failure behaviour
+│   ├── architecture.md                Architecture diagram, traffic rules, failure behaviour
+│   ├── architecture.drawio            Diagram source (draw.io)
+│   ├── architecture.png               Diagram export shown in architecture.md
 │   ├── cost-analysis.md               Monthly cost, rejected alternatives, recommendation
 │   ├── decisions.md                   Decision log in business terms
 │   └── demo-runbook.md                Commands for each client check in the live review

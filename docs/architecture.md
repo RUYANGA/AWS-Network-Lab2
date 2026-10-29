@@ -1,66 +1,10 @@
 # Architecture: onward-dev network
 
-GitHub renders the diagram below. Every box is created by `templates/onward-network.yaml`.
+Every resource in the diagram is created by `templates/onward-network.yaml`.
 
-```mermaid
-flowchart TB
-    users(["Merchants and customers"])
-    eng(["Engineers (IAM identity)"])
-    git(["GitHub repo, main branch"])
+![onward-dev network architecture](architecture.png)
 
-    subgraph aws["AWS account, eu-west-1"]
-        cfn["CloudFormation Git sync<br/>stack onward-network"]
-        ssm["Systems Manager<br/>Session Manager"]
-        cw["CloudWatch Logs<br/>VPC Flow Logs"]
-        budget["AWS Budgets<br/>onward-dev-network-budget"]
-
-        subgraph vpc["VPC onward-dev-vpc 10.20.0.0/16"]
-            igw["Internet Gateway<br/>onward-dev-igw"]
-            s3ep["S3 gateway endpoint<br/>(free, Amazon Linux repos)"]
-
-            subgraph azA["Availability Zone A"]
-                subgraph pubA["public-a 10.20.0.0/24"]
-                    natA["NAT Gateway nat-a"]
-                    albA["ALB node"]
-                end
-                subgraph webA["web-a 10.20.2.0/24 (private)"]
-                    feA["Front-end server<br/>nginx, ASG"]
-                end
-                subgraph intA["internal-a 10.20.4.0/24 (private)"]
-                    beA["Order service A<br/>:8080"]
-                end
-            end
-
-            subgraph azB["Availability Zone B"]
-                subgraph pubB["public-b 10.20.1.0/24"]
-                    natB["NAT Gateway nat-b"]
-                    albB["ALB node"]
-                end
-                subgraph webB["web-b 10.20.3.0/24 (private)"]
-                    feB["Front-end server<br/>nginx, ASG"]
-                end
-                subgraph intB["internal-b 10.20.5.0/24 (private)"]
-                    beB["Order service B<br/>:8080"]
-                end
-            end
-        end
-    end
-
-    users -- "HTTP 80" --> igw --> albA & albB
-    albA -- "80, alb-sg to web-sg" --> feA
-    albB -- "80" --> feB
-    albA -. "cross-zone" .-> feB
-    albB -. "cross-zone" .-> feA
-    feA -- "8080, web-sg to internal-sg" --> beA
-    feB -- "8080" --> beB
-    beA & feA -- "outbound 443/80" --> natA --> igw
-    beB & feB -- "outbound 443/80" --> natB --> igw
-    beA & beB & feA & feB -. "dnf" .-> s3ep
-    eng -- "IAM + ssm:StartSession" --> ssm
-    ssm -. "agent connects outbound,<br/>no inbound port" .-> beA & beB & feA & feB
-    git -- "commit" --> cfn
-    vpc -. "all traffic metadata" .-> cw
-```
+The source is [architecture.drawio](architecture.drawio). Open it in [diagrams.net](https://app.diagrams.net) or the Draw.io VS Code extension, edit it, then export it again as `architecture.png` (File > Export as > PNG, zoom 200%).
 
 ## Traffic rules
 
