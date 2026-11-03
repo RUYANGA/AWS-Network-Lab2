@@ -11,7 +11,10 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, test, prod]
+    AllowedValues:
+      - dev
+      - test
+      - prod
   OwnerName:
     Type: String
     Default: Merci RUYANGA
@@ -26,9 +29,12 @@ Resources:
       ConnectionName: !Sub "${ProjectName}-${Environment}-github"
       ProviderType: GitHub
       Tags:
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # --- Role 1: Git sync service role (reads the repo, drives change sets) ---
   GitSyncServicePolicy:
@@ -54,7 +60,9 @@ Resources:
             Resource: "*"
           - Sid: PolicyForManagedRules
             Effect: Allow
-            Action: [events:PutRule, events:PutTargets]
+            Action:
+              - events:PutRule
+              - events:PutTargets
             Resource: "*"
             Condition:
               StringEquals:
@@ -73,14 +81,20 @@ Resources:
         Statement:
           - Sid: CfnGitSyncTrustPolicy
             Effect: Allow
-            Principal: { Service: cloudformation.sync.codeconnections.amazonaws.com }
+            Principal:
+              Service: cloudformation.sync.codeconnections.amazonaws.com
             Action: sts:AssumeRole
-      ManagedPolicyArns: [!Ref GitSyncServicePolicy]
+      ManagedPolicyArns:
+        - !Ref GitSyncServicePolicy
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-gitsync-role" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-gitsync-role"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
   # --- Role 2: stack execution role (creates the network resources) ---
   # Scoped to the services the network stack uses. IAM actions are limited to
@@ -118,7 +132,9 @@ Resources:
             Resource: "*"
           - Sid: ReadPublicAmiParameter
             Effect: Allow
-            Action: [ssm:GetParameter, ssm:GetParameters]
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
             Resource: !Sub "arn:${AWS::Partition}:ssm:*::parameter/aws/service/*"
           - Sid: ManageProjectIam
             Effect: Allow
@@ -187,17 +203,23 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Principal: { Service: cloudformation.amazonaws.com }
+            Principal:
+              Service: cloudformation.amazonaws.com
             Action: sts:AssumeRole
             Condition:
               StringEquals:
                 aws:SourceAccount: !Ref AWS::AccountId
-      ManagedPolicyArns: [!Ref StackExecutionPolicy]
+      ManagedPolicyArns:
+        - !Ref StackExecutionPolicy
       Tags:
-        - { Key: Name, Value: !Sub "${ProjectName}-${Environment}-cfn-exec-role" }
-        - { Key: Project, Value: !Ref ProjectName }
-        - { Key: Owner, Value: !Ref OwnerName }
-        - { Key: Environment, Value: !Ref Environment }
+        - Key: Name
+          Value: !Sub "${ProjectName}-${Environment}-cfn-exec-role"
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Owner
+          Value: !Ref OwnerName
+        - Key: Environment
+          Value: !Ref Environment
 
 Outputs:
   ConnectionArn:
